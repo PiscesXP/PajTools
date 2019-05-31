@@ -1,5 +1,6 @@
 package xyz.piscesxp.pajtools.ui.record.list
 
+import android.app.ProgressDialog
 import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater

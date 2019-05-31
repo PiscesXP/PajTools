@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +23,9 @@ import xyz.piscesxp.pajtools.utility.PermissionChecker
 import java.io.File
 import kotlin.random.Random
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.fragment.app.DialogFragment
+import com.google.android.material.snackbar.Snackbar
 import xyz.piscesxp.pajtools.data.account.Record
 
 
@@ -30,6 +34,7 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
 
     private var myListeners: RecordListFragmentListeners? = null
     private var mAdapter: RecordListItemRecyclerViewAdapter? = null
+    private val TAG = this.javaClass.simpleName
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,12 +50,7 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
         val view = inflater.inflate(R.layout.fragment_item_list, container, false)
 
         selectAccount()
-        // Set the adapter
-        if (view is RecyclerView) {
-            with(view) {
-                //adapter = RecordListItemRecyclerViewAdapter(, myListeners, this@RecordListFragment)
-            }
-        }
+
         return view
     }
 
@@ -88,15 +88,28 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
 
     fun updateAdapterDataSet(newDataSet: GameAccountData) {
         //转换
-        if (mAdapter == null && view is RecyclerView) {
-            val myView = view as RecyclerView
-            myView.adapter = RecordListItemRecyclerViewAdapter(newDataSet, myListeners, this@RecordListFragment)
+        val recyclerView = view?.findViewById<RecyclerView>(R.id.item_list)
+        if (recyclerView is RecyclerView) {
+            if (mAdapter == null) {
+                recyclerView.adapter =
+                    RecordListItemRecyclerViewAdapter(newDataSet, myListeners, this@RecordListFragment)
+            } else {
+                mAdapter?.updateDataSet(newDataSet)
+            }
+            if (view != null) {
+                val root = (view as View).findViewById<ConstraintLayout>(R.id.item_list_root_constraint)
+                Snackbar.make(root, "数据读取完成", Snackbar.LENGTH_SHORT).show()
+            }
         } else {
-            mAdapter?.updateDataSet(newDataSet)
+            Log.e(TAG, "RecyclerView not found!")
         }
     }
 
     private fun selectAccount() {
+        if (view != null) {
+            val root = (view as View).findViewById<ConstraintLayout>(R.id.item_list_root_constraint)
+            Snackbar.make(view as View, "正在获取本地账号数据", Snackbar.LENGTH_INDEFINITE).show()
+        }
         var items = mutableListOf<String>()
         val gameAccountDataList = myListeners?.onRequireAllData()
         if (gameAccountDataList == null) return
