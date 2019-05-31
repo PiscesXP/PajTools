@@ -9,14 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.google.gson.Gson
 import xyz.piscesxp.pajtools.R
-import xyz.piscesxp.pajtools.data.database.AppDatabase
-import xyz.piscesxp.pajtools.data.database.CombatRecordDao
 import xyz.piscesxp.pajtools.data.database.CombatRecordEntity
 import xyz.piscesxp.pajtools.data.record.RecordData
 import xyz.piscesxp.pajtools.utility.PermissionChecker
@@ -24,15 +19,8 @@ import xyz.piscesxp.pajtools.utility.PermissionChecker
 import java.io.File
 import kotlin.random.Random
 
-/**
- * A fragment representing a list of Items.
- * Activities containing this fragment MUST implement the
- * [RecordListFragment.RecordListFragmentListeners] interface.
- */
 class RecordListFragment : Fragment() {
 
-    // TODO: Customize parameters
-    private var columnCount = 1
 
     private var myListeners: RecordListFragmentListeners? = null
 
@@ -40,7 +28,6 @@ class RecordListFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         arguments?.let {
-            columnCount = it.getInt(ARG_COLUMN_COUNT)
         }
     }
 
@@ -76,10 +63,6 @@ class RecordListFragment : Fragment() {
         // Set the adapter
         if (view is RecyclerView) {
             with(view) {
-                layoutManager = when {
-                    columnCount <= 1 -> LinearLayoutManager(context)
-                    else -> GridLayoutManager(context, columnCount)
-                }
                 adapter = RecordListItemRecyclerViewAdapter(readCombatRecords(), myListeners)
             }
         }
@@ -115,15 +98,10 @@ class RecordListFragment : Fragment() {
 
     companion object {
 
-        // TODO: Customize parameter argument names
-        const val ARG_COLUMN_COUNT = "column-count"
-
-        // TODO: Customize parameter initialization
         @JvmStatic
-        fun newInstance(columnCount: Int) =
+        fun newInstance() =
             RecordListFragment().apply {
                 arguments = Bundle().apply {
-                    putInt(ARG_COLUMN_COUNT, columnCount)
                 }
             }
     }

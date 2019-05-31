@@ -1,8 +1,10 @@
 package xyz.piscesxp.pajtools
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import xyz.piscesxp.pajtools.data.HeroImage
 import xyz.piscesxp.pajtools.data.record.RecordData
@@ -12,7 +14,7 @@ import xyz.piscesxp.pajtools.ui.record.list.RecordListItemDetailFragment
 class MainActivity : AppCompatActivity(), RecordListFragment.RecordListFragmentListeners,
     RecordListItemDetailFragment.RecordListItemDetailFragmentListeners {
     companion object {
-        private val TAG = MainActivity.javaClass.canonicalName
+        private val TAG = MainActivity::class.java.canonicalName
     }
 
     private lateinit var mRecordListFragment: RecordListFragment
@@ -20,7 +22,14 @@ class MainActivity : AppCompatActivity(), RecordListFragment.RecordListFragmentL
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_home -> {
-                supportFragmentManager.beginTransaction().replace(R.id.frameLayout, mRecordListFragment).commit()
+                val fragmentManager = supportFragmentManager
+                fragmentManager.beginTransaction().replace(R.id.frameLayout, mRecordListFragment).commit()
+                fragmentManager.addOnBackStackChangedListener(FragmentManager.OnBackStackChangedListener {
+                    Log.d(
+                        TAG,
+                        "Fragment back"
+                    )
+                })
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_dashboard -> {
@@ -42,10 +51,12 @@ class MainActivity : AppCompatActivity(), RecordListFragment.RecordListFragmentL
 
 
         //switch to RecordListFragment
-        mRecordListFragment = RecordListFragment()
+        mRecordListFragment = RecordListFragment.newInstance()
         supportFragmentManager.beginTransaction().add(R.id.frameLayout, mRecordListFragment).commit()
     }
 
+    //--------------------------------------------------------------
+    //implements of fragment listeners
     override fun onBackupButtonPressed(item: RecordData) {
         Toast.makeText(applicationContext, "已备份文件${item.guid}", Toast.LENGTH_SHORT).show()
     }
