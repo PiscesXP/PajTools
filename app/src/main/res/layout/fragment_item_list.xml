@@ -6,8 +6,7 @@
     android:name="xyz.piscesxp.pajtools.ItemFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
+    android:background="#D3D3D3"
     app:layoutManager="LinearLayoutManager"
     tools:context=".ui.record.list.RecordListFragment"
     tools:listitem="@layout/fragment_record_list_item" />
