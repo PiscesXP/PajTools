@@ -21,9 +21,11 @@ import xyz.piscesxp.pajtools.data.record.RecordData
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 class RecordListItemRecyclerViewAdapter(
-    private val mValues: List<RecordData>,
-    private val mListenerRecord: RecordListFragmentListeners?
+    private var mValues: List<RecordData>,
+    private val fragmentListeners: RecordListFragmentListeners?,
+    private val myListeners: RecordListItemRecyclerViewAdapter.Listeners
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val mOnClickListener: View.OnClickListener
@@ -39,8 +41,16 @@ class RecordListItemRecyclerViewAdapter(
             val item = v.tag as DummyItem
             // Notify the active callbacks interface (the activity, if the fragment is attached to
             // one) that an item has been selected.
-            //mListenerRecord?.onBackupButtonPressed(item)
+            //fragmentListeners?.onBackupButtonPressed(item)
         }
+    }
+
+    /**
+     * 更新数据
+     * */
+    fun updateDataSet(newValues: List<RecordData>) {
+        mValues = newValues
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -74,7 +84,9 @@ class RecordListItemRecyclerViewAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is MenuViewHolder) {
             //menu
-            holder.switchAccount.setOnClickListener(View.OnClickListener { holder.switchAccount.text = "ok" })
+            holder.switchAccount.setOnClickListener(View.OnClickListener {
+                val gameAccountDataList = myListeners.onChangeAccount()
+            }
 
         } else if (holder is ItemViewHolder) {
             //record item
@@ -107,7 +119,7 @@ class RecordListItemRecyclerViewAdapter(
                     it.stateIcon.visibility = View.INVISIBLE
                     it.backupButton.setOnClickListener { v ->
                         holder.successPrompt.text = "备份成功"
-                        mListenerRecord?.onBackupButtonPressed(item)
+                        fragmentListeners?.onBackupButtonPressed(item)
                     }
                 }
             }
@@ -129,7 +141,7 @@ class RecordListItemRecyclerViewAdapter(
             //加载式神图片
             val heroID: Int? = item.heroData[item.pos.toString()]?.heroID
             if (heroID != null) {
-                val url = mListenerRecord?.onLoadHeroImage(heroID)
+                val url = fragmentListeners?.onLoadHeroImage(heroID)
                 Log.d(TAG, "loading image $url")
                 Picasso.get().load(url).into(holder.heroImage)
             }
@@ -149,12 +161,17 @@ class RecordListItemRecyclerViewAdapter(
     }
 
     inner class MenuViewHolder(val mView: View) : RecyclerView.ViewHolder(mView) {
-        val accountName: TextView = mView.accountName
+        val accountName: TextView = mView.accountInfo
         val switchAccount: Button = mView.switchAccount
-        val inGameRecord: TextView = mView.inGameRecord
+        val inGameRecord: TextView = mView.inGameRecordCount
         val startBackup: Button = mView.startBackup
-        val alreadyBackupRecord: TextView = mView.alreadyBackupRecord
+        val alreadyBackupRecord: TextView = mView.backupRecordCount
         val restoreBackup: Button = mView.restoreBackup
 
+    }
+
+    interface Listeners {
+        fun onChangeAccount()
+        fun onDataSetChange()
     }
 }

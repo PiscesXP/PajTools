@@ -2,8 +2,10 @@ package xyz.piscesxp.pajtools.ui.record.list
 
 import android.Manifest
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,17 +14,22 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import xyz.piscesxp.pajtools.R
+import xyz.piscesxp.pajtools.data.account.GameAccountData
 import xyz.piscesxp.pajtools.data.database.CombatRecordEntity
 import xyz.piscesxp.pajtools.data.record.RecordData
 import xyz.piscesxp.pajtools.utility.PermissionChecker
 
 import java.io.File
 import kotlin.random.Random
+import androidx.appcompat.app.AlertDialog
+import xyz.piscesxp.pajtools.data.account.Record
 
-class RecordListFragment : Fragment() {
+
+class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listeners {
 
 
     private var myListeners: RecordListFragmentListeners? = null
+    private var mAdapter: RecordListItemRecyclerViewAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,33 +44,11 @@ class RecordListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_item_list, container, false)
 
-
-        //申请权限
-        if (!PermissionChecker.checkPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            //没权限，向用户申请
-            Toast.makeText(requireContext(), "需要读取本机文件来获取记录", Toast.LENGTH_LONG).show()
-            requestPermissions(Array(1) { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 0)
-        }
-        if (!PermissionChecker.checkPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            Toast.makeText(requireContext(), "未获得权限", Toast.LENGTH_LONG).show()
-            return view
-        }
-
-        val recordDataList = readCombatRecords()
-        for (recordData in recordDataList) {
-            val combatRecordEntity = CombatRecordEntity(
-                id = Random.nextInt(),
-                isBackupLocal = false,
-                isBackupRemote = false,
-                recordData = recordData
-            )
-            //AppDatabase.getDatabase(requireContext())
-
-        }
+        selectAccount()
         // Set the adapter
         if (view is RecyclerView) {
             with(view) {
-                adapter = RecordListItemRecyclerViewAdapter(readCombatRecords(), myListeners)
+                //adapter = RecordListItemRecyclerViewAdapter(, myListeners, this@RecordListFragment)
             }
         }
         return view
@@ -89,12 +74,65 @@ class RecordListFragment : Fragment() {
         fun onBackupButtonPressed(item: RecordData)
         fun onRecordSelected(item: RecordData)
         fun onLoadHeroImage(heroID: Int): String?
+        /**
+         * @return All account data list.
+         * */
+        fun onRequireAllData(): List<GameAccountData>
+
+        //fun onChangeAccount(): GameAccountData
     }
 
     fun setRecordListFragmentListeners(listeners: RecordListFragmentListeners) {
         myListeners = listeners
     }
 
+    fun updateAdapterDataSet(gameAccountData: GameAccountData) {
+        //转换
+        val newDataSet = gameAccountData.getRecordDataList()
+        if (mAdapter == null && view is RecyclerView) {
+            val myView = view as RecyclerView
+            myView.adapter = RecordListItemRecyclerViewAdapter(newDataSet, myListeners, this@RecordListFragment)
+        } else {
+            mAdapter?.updateDataSet(newDataSet)
+        }
+    }
+
+    private fun selectAccount() {
+        var items = mutableListOf<String>()
+        val gameAccountDataList = myListeners?.onRequireAllData()
+        if (gameAccountDataList == null) return
+        Log.d("shit", "${gameAccountDataList?.size}")
+        //gameAccountDataList?.forEach { account -> items.add("${account.gameSourceType.sourceName} - ${account.accountName}") }
+        for (account in gameAccountDataList) {
+            items.add("${account.gameSourceType.sourceName} - ${account.accountName}")
+        }
+
+        val singleChoiceDialog = AlertDialog.Builder(requireContext())
+        var choice: Int = 0
+        singleChoiceDialog.setTitle("选择要备份的账号")
+        singleChoiceDialog.setSingleChoiceItems(
+            items.toTypedArray(),
+            choice,
+            { dialog, which -> choice = which })
+        singleChoiceDialog.setPositiveButton(
+            "确定",
+            { _, which ->
+                if (gameAccountDataList != null) {
+                    updateAdapterDataSet(gameAccountDataList[choice])
+                } else {
+                    //TODO
+                }
+            })
+        singleChoiceDialog.show()
+    }
+
+    override fun onChangeAccount() {
+        selectAccount()
+    }
+
+    override fun onDataSetChange() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     companion object {
 
