@@ -36,6 +36,14 @@ data class GameAccountData(
         }
         return recordDataList
     }
+
+    /**
+     * @return 渠道 - 用户名
+     * */
+    fun getAccountInfo():String{
+        return "${gameSourceType.sourceName} - $accountName"
+    }
+
 }
 
 data class Record(

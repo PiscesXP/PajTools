@@ -17,13 +17,14 @@ import xyz.piscesxp.pajtools.ui.record.list.RecordListFragment.RecordListFragmen
 import xyz.piscesxp.pajtools.dummy.DummyContent.DummyItem
 
 import xyz.piscesxp.pajtools.R
+import xyz.piscesxp.pajtools.data.account.GameAccountData
 import xyz.piscesxp.pajtools.data.record.RecordData
 import java.text.SimpleDateFormat
 import java.util.*
 
 
 class RecordListItemRecyclerViewAdapter(
-    private var mValues: List<RecordData>,
+    internal var mValues: GameAccountData,
     private val fragmentListeners: RecordListFragmentListeners?,
     private val myListeners: RecordListItemRecyclerViewAdapter.Listeners
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -48,7 +49,8 @@ class RecordListItemRecyclerViewAdapter(
     /**
      * 更新数据
      * */
-    fun updateDataSet(newValues: List<RecordData>) {
+    fun updateDataSet(newValues: GameAccountData) {
+        Log.d(TAG,"Updating data set")
         mValues = newValues
         notifyDataSetChanged()
     }
@@ -84,13 +86,24 @@ class RecordListItemRecyclerViewAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is MenuViewHolder) {
             //menu
-            holder.switchAccount.setOnClickListener(View.OnClickListener {
-                val gameAccountDataList = myListeners.onChangeAccount()
+            with(holder) {
+                switchAccount.setOnClickListener(View.OnClickListener {
+                    myListeners.onChangeAccount()
+                })
+                startBackup.setOnClickListener {
+                    //TODO 开始备份
+                }
+                restoreBackup.setOnClickListener {
+                    //TODO 还原备份
+                }
+                accountInfo.text = mValues.getAccountInfo()
+                inGameRecordCount.text = mValues.getLocalRecordCount().toString()
+                backupRecordCount.text = mValues.getBackupRecordCount().toString()
             }
 
         } else if (holder is ItemViewHolder) {
             //record item
-            val item = mValues[position - 1]
+            val item = mValues.getRecordDataList()[position - 1]
             //日期
             val date = Date((item.endTime).toLong() * 1000)
             holder.matchTime.text = SimpleDateFormat("yyyy-MM-dd kk:mm").format(date)
@@ -148,7 +161,7 @@ class RecordListItemRecyclerViewAdapter(
         }
     }
 
-    override fun getItemCount(): Int = mValues.size + 1
+    override fun getItemCount(): Int = mValues.getRecordDataList().size + 1
 
     inner class ItemViewHolder(val mView: View) : RecyclerView.ViewHolder(mView) {
         val matchType: TextView = mView.matchType
@@ -161,11 +174,11 @@ class RecordListItemRecyclerViewAdapter(
     }
 
     inner class MenuViewHolder(val mView: View) : RecyclerView.ViewHolder(mView) {
-        val accountName: TextView = mView.accountInfo
+        val accountInfo: TextView = mView.accountInfo
         val switchAccount: Button = mView.switchAccount
-        val inGameRecord: TextView = mView.inGameRecordCount
+        val inGameRecordCount: TextView = mView.inGameRecordCount
         val startBackup: Button = mView.startBackup
-        val alreadyBackupRecord: TextView = mView.backupRecordCount
+        val backupRecordCount: TextView = mView.backupRecordCount
         val restoreBackup: Button = mView.restoreBackup
 
     }

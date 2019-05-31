@@ -86,9 +86,8 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
         myListeners = listeners
     }
 
-    fun updateAdapterDataSet(gameAccountData: GameAccountData) {
+    fun updateAdapterDataSet(newDataSet: GameAccountData) {
         //转换
-        val newDataSet = gameAccountData.getRecordDataList()
         if (mAdapter == null && view is RecyclerView) {
             val myView = view as RecyclerView
             myView.adapter = RecordListItemRecyclerViewAdapter(newDataSet, myListeners, this@RecordListFragment)
