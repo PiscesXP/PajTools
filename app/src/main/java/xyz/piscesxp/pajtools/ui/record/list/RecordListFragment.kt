@@ -96,20 +96,13 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
             } else {
                 mAdapter?.updateDataSet(newDataSet)
             }
-            if (view != null) {
-                val root = (view as View).findViewById<ConstraintLayout>(R.id.item_list_root_constraint)
-                Snackbar.make(root, "数据读取完成", Snackbar.LENGTH_SHORT).show()
-            }
+            Toast.makeText(requireContext(),"数据更新成功",Toast.LENGTH_SHORT).show()
         } else {
             Log.e(TAG, "RecyclerView not found!")
         }
     }
 
     private fun selectAccount() {
-        if (view != null) {
-            val root = (view as View).findViewById<ConstraintLayout>(R.id.item_list_root_constraint)
-            Snackbar.make(view as View, "正在获取本地账号数据", Snackbar.LENGTH_INDEFINITE).show()
-        }
         var items = mutableListOf<String>()
         val gameAccountDataList = myListeners?.onRequireAllData()
         if (gameAccountDataList == null) return
