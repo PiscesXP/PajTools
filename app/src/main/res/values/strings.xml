@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">平安京小工具</string>
+    <string name="title_home">录像备份</string>
+    <string name="title_dashboard">式神数据</string>
+    <string name="title_notifications">通知</string>
+    <string name="match_type_default">为崽而战</string>
+    <string name="match_time_default">2019</string>
+    <string name="backup_button">备份</string>
+    <string name="success_backup_prompt">备份成功</string>
+    <string name="victory">胜利</string>
+</resources>
