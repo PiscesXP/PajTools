@@ -49,7 +49,12 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
     ): View? {
         val view = inflater.inflate(R.layout.fragment_item_list, container, false)
 
-        selectAccount()
+        if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            requestPermissions(Array(1) { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 0)
+            "shit"
+        } else {
+            selectAccount()
+        }
 
         return view
     }
@@ -79,7 +84,6 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
          * */
         fun onRequireAllData(): List<GameAccountData>
 
-        //fun onChangeAccount(): GameAccountData
     }
 
     fun setRecordListFragmentListeners(listeners: RecordListFragmentListeners) {
@@ -96,7 +100,7 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
             } else {
                 mAdapter?.updateDataSet(newDataSet)
             }
-            Toast.makeText(requireContext(),"数据更新成功",Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "数据更新成功", Toast.LENGTH_SHORT).show()
         } else {
             Log.e(TAG, "RecyclerView not found!")
         }
@@ -107,7 +111,6 @@ class RecordListFragment : Fragment(), RecordListItemRecyclerViewAdapter.Listene
         val gameAccountDataList = myListeners?.onRequireAllData()
         if (gameAccountDataList == null) return
         Log.d("shit", "${gameAccountDataList?.size}")
-        //gameAccountDataList?.forEach { account -> items.add("${account.gameSourceType.sourceName} - ${account.accountName}") }
         for (account in gameAccountDataList) {
             items.add("${account.gameSourceType.sourceName} - ${account.accountName}")
         }

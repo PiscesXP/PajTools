@@ -1,10 +1,16 @@
 package xyz.piscesxp.pajtools
 
+import android.Manifest
+import android.app.Activity
+import android.content.DialogInterface
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
@@ -16,17 +22,17 @@ import xyz.piscesxp.pajtools.ui.record.list.RecordListFragment
 import xyz.piscesxp.pajtools.ui.record.list.RecordListItemDetailFragment
 import xyz.piscesxp.pajtools.utility.GameSourceType
 import java.io.File
-import android.content.DialogInterface
-import androidx.appcompat.app.AlertDialog
 
 
 class MainActivity : AppCompatActivity(), RecordListFragment.RecordListFragmentListeners,
-    RecordListItemDetailFragment.RecordListItemDetailFragmentListeners {
+    RecordListItemDetailFragment.RecordListItemDetailFragmentListeners,
+    ActivityCompat.OnRequestPermissionsResultCallback {
     companion object {
         private val TAG = MainActivity::class.java.canonicalName
     }
 
     private lateinit var mRecordListFragment: RecordListFragment
+    private val mPermissionRequestCode: Int = 32
 
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -58,12 +64,51 @@ class MainActivity : AppCompatActivity(), RecordListFragment.RecordListFragmentL
 
         navView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener)
 
+        checkPermission()
+    }
 
+    //--------------------------------------
+    fun start() {
         //switch to RecordListFragment
         mRecordListFragment = RecordListFragment.newInstance()
         supportFragmentManager.beginTransaction().add(R.id.frameLayout, mRecordListFragment).commit()
     }
 
+    /**
+     * 检查权限，没有的话向用户申请
+     * */
+    fun checkPermission() {
+        val requirePermissions = Array<String>(1) { Manifest.permission.WRITE_EXTERNAL_STORAGE }
+        var isGranted = true
+        for (permission in requirePermissions) {
+            isGranted = isGranted && ActivityCompat.checkSelfPermission(
+                applicationContext,
+                permission
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+        if (isGranted) {
+            //已获得权限，开始
+            Log.d(TAG, "Starting")
+            start()
+        } else {
+            //向用户申请权限
+            Log.d(TAG, "Acquiring permission")
+            val activity: Activity = this
+            with(AlertDialog.Builder(this)) {
+                setTitle("APP需要以下权限")
+                setMessage("- 存储权限: 用于读取录像文件列表 ^_^")
+                setPositiveButton("好的", DialogInterface.OnClickListener { dialog, which ->
+                    ActivityCompat.requestPermissions(activity, requirePermissions, mPermissionRequestCode)
+                })
+                show()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        checkPermission()
+    }
 
     //--------------------------------------------------------------
     fun getAvaliableGameAccount(): List<GameAccountData> {
@@ -75,8 +120,8 @@ class MainActivity : AppCompatActivity(), RecordListFragment.RecordListFragmentL
             val rootDir = File("${pathPrefix}${type.toPackageName()}${pathPostfix}")
             if (rootDir.exists()) {
                 //游戏录像根目录
-                Log.d(TAG, "Found game source type:${type.sourceName}")
-                for (userDir in rootDir.listFiles().filter { dir -> dir.isDirectory() }) {
+                Log.d(TAG, "Found game source type:${type.sourceName}, ${rootDir.absolutePath}")
+                for (userDir in rootDir.listFiles().filter { file -> file.isDirectory() }) {
                     //玩家录像根目录
                     Log.d(TAG, "Found user dir:${userDir.name}")
                     val recordDataList = mutableListOf<RecordData>()
@@ -131,7 +176,9 @@ class MainActivity : AppCompatActivity(), RecordListFragment.RecordListFragmentL
     /**
      * 根据目录判断渠道服、账号，提示框选择切换.
      * */
-    override fun onRequireAllData():List<GameAccountData> {
+    override fun onRequireAllData(): List<GameAccountData> {
         return getAvaliableGameAccount()
     }
+
+
 }
